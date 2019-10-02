@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
-# Stickerfy pngs
-
 from gimpfu import *
 
-def stickerfy(sticker, meme, interpolation = 3, borderColor = "#FFFFFF"):
-    
+def stickerfy(sticker, meme = "", interpolation = 3, borderColor = "white"):
+    if __name__ == "stickerfy":
+        pdb.gimp_message('rodando como modulo')
+        fname = sticker
+        sticker = pdb.gimp_file_load(sticker, sticker)
+        meme = pdb.gimp_image_get_active_layer(sticker)
+    else:
+        pdb.gimp_message('rodando como programa principal')
+
     pdb.gimp_context_set_interpolation(interpolation)
     pdb.gimp_context_set_foreground(borderColor)
 
@@ -37,19 +42,30 @@ def stickerfy(sticker, meme, interpolation = 3, borderColor = "#FFFFFF"):
     pdb.gimp_image_insert_layer(sticker, silhueta, None, 1)
     pdb.gimp_drawable_edit_fill(silhueta, 0)
     pdb.gimp_selection_none(sticker)
-    pdb.script_fu_drop_shadow(sticker, silhueta, 3, 3, 3, "#000000", 50.0, 0)
+    pdb.script_fu_drop_shadow(sticker, silhueta, 3, 3, 3, "black", 50.0, 0)
+    mergedLayers = pdb.gimp_image_merge_visible_layers(sticker, 0)
 
-register(
+    if __name__ == "stickerfy":
+        import os
+        stickerName = os.path.dirname(fname) + "\\" + os.path.splitext(os.path.basename(fname))[0] + "-sticker.png"
+        pdb.gimp_message(stickerName)
+        pdb.file_png_save_defaults(sticker, mergedLayers, stickerName, stickerName)
+        pdb.gimp_image_delete(sticker)
+    else:
+        return mergedLayers
+
+if __name__ == "__main__":
+    register(
         "python_fu_stickerfy",
-        "Convert a png to one that follows Whatsapp/Telegram stickers guidelines",
-        "Convert a png to one that follows Whatsapp/Telegram stickers guidelines",
+        "Transform a png into a Whatsapp/Telegram sticker",
+        "Scale to 512x512, add margins, border and dropshadow",
         "Rudah Amaral",
         "Rudah Amaral",
         "2019",
         "<Image>/Filters/Artistic/_Stickerfy...",
         "RGB*, GRAY*",
         [
-            (PF_RADIO, "interpolation", "Set interpolation method used to scale the png", 3,
+            (PF_RADIO, "interpolation", "Set interpolation method", 3,
                 (
                     ("None", 0),
                     ("Linear", 1),
@@ -58,9 +74,10 @@ register(
                     ("Lo-Halo", 4)
                 )
             ),
-            (PF_COLOR, "borderColor", "The border of the sticker", (255, 255, 255))
+            (PF_COLOR, "borderColor", "Set the border color", (255, 255, 255))
         ],
-        [],
+        [(PF_LAYER, "mergedLayers", "The layer that merged the sticker, the border and the dropshadow")],
         stickerfy)
 
-main()
+if __name__ == "__main__":
+    main()
