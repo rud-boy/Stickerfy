@@ -3,13 +3,14 @@
 from gimpfu import *
 
 def stickerfy(sticker, meme = "", interpolation = 3, borderColor = "white"):
+
     if __name__ == "stickerfy":
-        pdb.gimp_message('rodando como modulo')
         fname = sticker
         sticker = pdb.gimp_file_load(sticker, sticker)
         meme = pdb.gimp_image_get_active_layer(sticker)
-    else:
-        pdb.gimp_message('rodando como programa principal')
+
+    if pdb.gimp_drawable_is_indexed(meme):
+        pdb.gimp_image_convert_rgb(sticker)
 
     pdb.gimp_context_set_interpolation(interpolation)
     pdb.gimp_context_set_foreground(borderColor)
@@ -43,16 +44,14 @@ def stickerfy(sticker, meme = "", interpolation = 3, borderColor = "white"):
     pdb.gimp_drawable_edit_fill(silhueta, 0)
     pdb.gimp_selection_none(sticker)
     pdb.script_fu_drop_shadow(sticker, silhueta, 3, 3, 3, "black", 50.0, 0)
-    mergedLayers = pdb.gimp_image_merge_visible_layers(sticker, 0)
 
     if __name__ == "stickerfy":
         import os
-        stickerName = os.path.dirname(fname) + "\\" + os.path.splitext(os.path.basename(fname))[0] + "-sticker.png"
-        pdb.gimp_message(stickerName)
-        pdb.file_png_save_defaults(sticker, mergedLayers, stickerName, stickerName)
+        stickerName = os.path.dirname(fname) + "\\" + os.path.splitext(os.path.basename(fname))[0] + "-sticker"
+        pdb.gimp_xcf_save(0, sticker, sticker.active_drawable, stickerName + ".xcf", stickerName + ".xcf")
+        mergedLayers = pdb.gimp_image_merge_visible_layers(sticker, 0)
+        pdb.file_png_save_defaults(sticker, mergedLayers, stickerName + ".png", stickerName + ".png")
         pdb.gimp_image_delete(sticker)
-    else:
-        return mergedLayers
 
 if __name__ == "__main__":
     register(
@@ -76,8 +75,8 @@ if __name__ == "__main__":
             ),
             (PF_COLOR, "borderColor", "Set the border color", (255, 255, 255))
         ],
-        [(PF_LAYER, "mergedLayers", "The layer that merged the sticker, the border and the dropshadow")],
-        stickerfy)
+        [],
+        stickerfy
+    )
 
-if __name__ == "__main__":
     main()
