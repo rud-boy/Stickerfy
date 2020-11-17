@@ -7,5 +7,5 @@ Windows: ```%APPDATA%\GIMP\2.10\plug-ins```
 *nix: ```~/.config/GIMP/2.10/plug-ins```
 
 # Uso
-Com uma imagem aberta no GIMP, vá em Filters > Artistic > Stickerfy...
+Com uma imagem aberta no GIMP, vá em Filters > Plug-ins > Stickerfy...
 Escolha o método de interpolação da escala e a cor da borda do Sticker.
