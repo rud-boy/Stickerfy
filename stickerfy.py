@@ -2,62 +2,53 @@
 
 from gimpfu import *
 
-def stickerfy(sticker, meme = "", interpolation = 3, borderColor = "white"):
+def stickerfy(image, stickerLayer, interpolation, borderColor):
 
-    if pdb.gimp_drawable_is_indexed(meme):
-        pdb.gimp_image_convert_rgb(sticker)
-
-    pdb.gimp_context_set_interpolation(interpolation)
-    pdb.gimp_context_set_foreground(borderColor)
-
-    pdb.plug_in_autocrop(sticker, meme)
-    width = pdb.gimp_drawable_width(meme) 
-    height = pdb.gimp_drawable_height(meme)
-
-    if width >= height:
-        scale = 464.0 / width
+    if pdb.gimp_drawable_is_indexed(stickerLayer):
+        pdb.gimp_image_convert_rgb(image)
+    pdb.plug_in_autocrop(image, stickerLayer)
+    stickerWidth = pdb.gimp_drawable_width(stickerLayer) 
+    stickerHeight = pdb.gimp_drawable_height(stickerLayer)
+    if stickerWidth >= stickerHeight:
+        scale = 464.0 / stickerWidth
     else:
-        scale = 464.0 / height
+        scale = 464.0 / stickerHeight
+    stickerWidth *= scale
+    stickerHeight *= scale
+    pdb.gimp_context_set_interpolation(interpolation)
+    pdb.gimp_layer_scale(stickerLayer, stickerWidth, stickerHeight, FALSE)
+    pdb.gimp_image_resize(image, 512, 512, 0, 0) 
+    offsetX = (512.0 - stickerWidth) / 2
+    offsetY = (512.0 - stickerHeight) / 2
+    pdb.gimp_layer_set_offsets(stickerLayer, offsetX, offsetY)
+    pdb.gimp_layer_resize_to_image_size(stickerLayer)
 
-    width = width * scale
-    height = height * scale
-    pdb.gimp_layer_scale(meme, width, height, FALSE)
+    border = pdb.gimp_layer_new(image, 512, 512, 1, "Border", 100.0, 0)
+    pdb.gimp_image_insert_layer(image, border, None, 1)
+    pdb.gimp_context_set_foreground(borderColor)
+    pdb.gimp_image_select_item(image, 0, stickerLayer)
+    pdb.gimp_selection_grow(image, 8)
+    pdb.gimp_drawable_edit_fill(border, 0)
+    pdb.gimp_selection_none(image)
 
-    pdb.gimp_image_resize(sticker, 512, 512, 0, 0) 
-
-    offx = (512.0 - width) / 2
-    offy = (512.0 - height) / 2
-    pdb.gimp_layer_set_offsets(meme, offx, offy)
-
-    pdb.gimp_layer_resize_to_image_size(meme)
-
-    pdb.gimp_image_select_item(sticker, 0, meme)
-    pdb.gimp_selection_grow(sticker, 8)
-
-    silhueta = pdb.gimp_layer_new(sticker, 512, 512, 1, "silhueta", 100.0, 0)
-    pdb.gimp_image_insert_layer(sticker, silhueta, None, 1)
-    pdb.gimp_drawable_edit_fill(silhueta, 0)
-    pdb.gimp_selection_none(sticker)
-    pdb.script_fu_drop_shadow(sticker, silhueta, 3, 3, 3, "black", 50.0, 0)
+    pdb.script_fu_drop_shadow(image, border, 3, 3, 3, "black", 50.0, 0)
 
 if __name__ == "__main__":
     register(
-        "python_fu_stickerfy",
-        "Transform a png into a Whatsapp/Telegram sticker",
-        "Scale to 512x512, add margins, border and dropshadow",
-        "Rudah Amaral",
-        "Rudah Amaral",
+        "stickerfy",
+        "Transform a png into a Whatsapp/Telegram sticker.",
+        "Scale to 512x512, add margins, border and dropshadow.",
+        "rud___boy",
+        "rud___boy",
         "2019",
-        "<Image>/Filters/Artistic/_Stickerfy...",
+        "<Image>/Filters/Plug-ins/_Stickerfy...",
         "RGB*, GRAY*",
         [
             (PF_RADIO, "interpolation", "Set interpolation method", 3,
                 (
-                    ("None", 0),
-                    ("Linear", 1),
-                    ("Cubic", 2),
-                    ("No-Halo", 3),
-                    ("Lo-Halo", 4)
+                    ("None (for pixelart)", 0),
+                    ("LoHalo", 3),
+                    ("NoHalo", 4)
                 )
             ),
             (PF_COLOR, "borderColor", "Set the border color", (255, 255, 255))
