@@ -9,13 +9,16 @@ def stickerfy(image, stickerLayer, interpolation, borderColor):
     if pdb.gimp_drawable_is_indexed(currentLayer):
         pdb.gimp_image_convert_rgb(image)
 
+    pdb.gimp_image_undo_group_start(image)
     for layer in image.layers:
         pdb.gimp_image_set_active_layer(image, layer)
         pdb.plug_in_autocrop_layer(image, layer)
     pdb.gimp_image_resize_to_layers(image)
     for layer in image.layers:
         pdb.gimp_layer_resize_to_image_size(layer)
+    pdb.gimp_image_undo_group_end(image)
 
+    pdb.gimp_image_undo_group_start(image)
     composedFramesWidth = pdb.gimp_image_width(image)
     composedFramesHeight = pdb.gimp_image_height(image)
     offsetX = (512.0 - composedFramesWidth) / 2
@@ -25,7 +28,9 @@ def stickerfy(image, stickerLayer, interpolation, borderColor):
         scaleFactor = 464.0 / composedFramesWidth
     else:
         scaleFactor = 464.0 / composedFramesHeight
+    pdb.gimp_image_undo_group_end(image)
 
+    pdb.gimp_image_undo_group_start(image)
     for layer in image.layers:
         layerWidth = pdb.gimp_drawable_width(layer) * scaleFactor
         layerHeight = pdb.gimp_drawable_height(layer) * scaleFactor
@@ -40,6 +45,7 @@ def stickerfy(image, stickerLayer, interpolation, borderColor):
         pdb.gimp_selection_none(image)
 
         pdb.script_fu_drop_shadow(image, border, 3, 3, 3, "black", 50.0, 0)
+    pdb.gimp_image_undo_group_end(image)
 
 register(
     "stickerfy",
